@@ -1,7 +1,7 @@
-import { Fragment } from "react";
-import { Routes, Route } from "react-router-dom";
 import { routes } from "../pages/routes";
-import { BaseLayout } from "../components/layout/base-layout";
+import { Routes, Route } from "react-router-dom";
+import { Fragment } from "react";
+import BaseLayout from "../components/layout/base-layout";
 
 const nestedRoutes = (routes, parentPath = "") =>
   routes.map(({ Element, key, children = [] }) => {
@@ -17,7 +17,6 @@ const nestedRoutes = (routes, parentPath = "") =>
     }
     return <Route key={fullPath} path={fullPath} element={<Element />} />;
   });
-
 export const AuthorizedRoutes = () => {
   return (
     <Routes>
@@ -28,14 +27,3 @@ export const AuthorizedRoutes = () => {
     </Routes>
   );
 };
-
-// export const UnAuthorizedRoutes = () => (
-//   <Routes>
-//     <Route path="/" element={<LoginLayout />}>
-//       <Route path="*" element={<NotFound />} />
-//       {authRoutes.map(({ Element, key }) => (
-//         <Route key={key} path={key} element={<Element />} />
-//       ))}
-//     </Route>
-//   </Routes>
-// );

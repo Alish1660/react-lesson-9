@@ -1,120 +1,175 @@
-import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-
-import { Layout, Menu, Button, Dropdown, Avatar } from "antd";
-import { Link, Outlet } from "react-router-dom";
-import { useBaseLayoutProps } from "./layout.props";
-import { hoc } from "../../../utils/hoc";
+import * as React from "react";
+import { styled, useTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import MuiDrawer from "@mui/material/Drawer";
+import MuiAppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import List from "@mui/material/List";
+import CssBaseline from "@mui/material/CssBaseline";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import MenuIcon from "@mui/icons-material/Menu";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import { Outlet, useNavigate } from "react-router-dom";
 import { routes } from "../../../pages/routes";
 
-const { Header, Sider, Content } = Layout;
+const drawerWidth = 240;
 
-const generateMenuItems = (route, basePath = "") => {
-  return route?.reduce(
-    (acc, { key, icon: IconComponent, label, children, visible }) => {
-      if (!visible) {
-        return acc;
-      }
-      const fullPath = `${basePath}${key}`;
-      const menuItem = {
-        key: fullPath,
-        icon: IconComponent ? <IconComponent /> : null,
-        label: !children ? label : <Link to={fullPath}>{label}</Link>,
-        visible,
-      };
-      if (children && children.length > 0) {
-        menuItem.children = generateMenuItems(children, `${fullPath}`);
-      }
-      return [...acc, menuItem];
-    },
-    []
+const openedMixin = (theme) => ({
+  width: drawerWidth,
+  transition: theme.transitions.create("width", {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  overflowX: "hidden",
+});
+
+const closedMixin = (theme) => ({
+  transition: theme.transitions.create("width", {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  overflowX: "hidden",
+  width: `calc(${theme.spacing(7)} + 1px)`,
+  [theme.breakpoints.up("sm")]: {
+    width: `calc(${theme.spacing(8)} + 1px)`,
+  },
+});
+
+const DrawerHeader = styled("div")(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  padding: theme.spacing(0, 1),
+  // necessary for content to be below app bar
+  ...theme.mixins.toolbar,
+}));
+
+const AppBar = styled(MuiAppBar, {
+  shouldForwardProp: (prop) => prop !== "open",
+})(({ theme, open }) => ({
+  zIndex: theme.zIndex.drawer + 1,
+  transition: theme.transitions.create(["width", "margin"], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(["width", "margin"], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}));
+
+const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== "open",
+})(({ theme, open }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  whiteSpace: "nowrap",
+  boxSizing: "border-box",
+  ...(open && {
+    ...openedMixin(theme),
+    "& .MuiDrawer-paper": openedMixin(theme),
+  }),
+  ...(!open && {
+    ...closedMixin(theme),
+    "& .MuiDrawer-paper": closedMixin(theme),
+  }),
+}));
+
+const BaseLayout = () => {
+  const theme = useTheme();
+  const [open, setOpen] = React.useState(false);
+  const navigate = useNavigate();
+
+  const handleDrawerOpen = () => {
+    setOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setOpen(false);
+  };
+
+  return (
+    <Box sx={{ display: "flex" }}>
+      <CssBaseline />
+      <AppBar position="fixed" open={open}>
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={handleDrawerOpen}
+            edge="start"
+            sx={{
+              marginRight: 5,
+              ...(open && { display: "none" }),
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div">
+            Mini variant drawer
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer variant="permanent" open={open}>
+        <DrawerHeader>
+          <IconButton onClick={handleDrawerClose}>
+            {theme.direction === "rtl" ? (
+              <ChevronRightIcon />
+            ) : (
+              <ChevronLeftIcon />
+            )}
+          </IconButton>
+        </DrawerHeader>
+        <Divider />
+        <List>
+          {routes.map((el, index) => (
+            <ListItem
+              key={el?.key}
+              onClick={() => navigate(el?.key)}
+              disablePadding
+              sx={{ display: "block" }}
+            >
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? "initial" : "center",
+                  px: 2.5,
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : "auto",
+                    justifyContent: "center",
+                  }}
+                >
+                  <el.icon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={el?.label}
+                  sx={{ opacity: open ? 1 : 0 }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Drawer>
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <DrawerHeader />
+        <Outlet />
+      </Box>
+    </Box>
   );
 };
-export const BaseLayout = hoc(
-  useBaseLayoutProps,
-  ({
-    borderRadiusLG,
-    collapsed,
-    colorBgContainer,
-    items,
-    pathname,
-    setCollapsed,
-  }) => {
-    const menuItems = generateMenuItems(routes);
-
-    return (
-      <Layout
-        className={`h-screen pt-[70px] relative duration-300 ${
-          collapsed ? "pl-[80px]" : "pl-[200px]"
-        }`}
-      >
-        <Sider
-          trigger={null}
-          collapsible
-          collapsed={collapsed}
-          className="base_layout_aside fixed top-0 z-[9999] left-0 h-screen bg-primary"
-        >
-          <div className={`text-white flex items-center justify-center py-3`}>
-            <h1
-              className={`duration-150 ${
-                collapsed ? "text-[0px]" : "text-[25px]"
-              }`}
-            >
-              API
-            </h1>
-            {/* <img
-                            src={''}
-                            alt="Site logo"
-                            className={`${!collapsed ? "w-[30px]" : "w-[50px]"}`}
-                        /> */}
-          </div>
-
-          <Menu
-            theme="dark"
-            mode="inline"
-            defaultSelectedKeys={[pathname]}
-            items={menuItems}
-          />
-        </Sider>
-        <Layout>
-          <Header
-            className={`shadow-md flex items-center justify-between duration-200 px-4 fixed top-0 right-0 z-[999] ${
-              !collapsed ? "w-[calc(100%-200px)]" : "w-[calc(100%-80px)]"
-            }`}
-            style={{
-              background: colorBgContainer,
-              height: "55px",
-            }}
-          >
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-            />
-            <div>
-              <Dropdown menu={{ items }} trigger={["click"]}>
-                <div className="flex items-center gap-2 cursor-pointer">
-                  <h1 className="text-[17px] cursor-pointer">Профиль:</h1>
-                  <Avatar size={"default"} style={{ backgroundColor: "green" }}>
-                    A
-                  </Avatar>
-                </div>
-              </Dropdown>
-            </div>
-          </Header>
-          <Content
-            style={{
-              margin: 0,
-              padding: 24,
-              minHeight: 280,
-              background: colorBgContainer,
-              borderRadius: borderRadiusLG,
-              overflowY: "scroll",
-            }}
-          >
-            <Outlet />
-          </Content>
-        </Layout>
-      </Layout>
-    );
-  }
-);
+export default BaseLayout;
